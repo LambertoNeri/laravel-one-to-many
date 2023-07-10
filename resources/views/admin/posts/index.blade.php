@@ -2,91 +2,87 @@
 
 @section('contents')
 
+    <h1>Posts</h1>
 
-    <h1>Edit post</h1>
-
-    {{-- @if ($errors->any())
+    @if (session('delete_success'))
+        @php $post = session('delete_success') @endphp
         <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+            Il post "{{ $post->title }}" è stato eliminato per sempre
+            {{-- <form
+                action="{{ route("admin.posts.restore", ['post' => $post]) }}"
+                    method="post"
+                    class="d-inline-block"
+                >
+                @csrf
+                <button class="btn btn-warning">Ripristina</button>
+            </form> --}}
+        </div>
+    @endif
+
+    {{-- @if (session('restore_success'))
+        @php $post = session('restore_success') @endphp
+        <div class="alert alert-success">
+            La post "{{ $post->title }}" è stata ripristinata
         </div>
     @endif --}}
 
-    <form method="POST" action="{{ route('admin.posts.update', ['post' => $post]) }}" novalidate>
-        @csrf
-        @method('put')
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Title</th>
+                <th scope="col">Category</th>
+                <th scope="col">Image url</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($posts as $post)
+                <tr>
+                    <th scope="row">{{ $post->id }}</th>
+                    <td>{{ $post->title }}</td>
+                    <td><a href="{{ route('admin.categories.show', ['category' => $post->category]) }}">{{ $post->category->name }}</a></td>
+                    <td>{{ $post->url_image }}</td>
+                    <td>
+                        <a class="btn btn-primary" href="{{ route('admin.posts.show', ['post' => $post]) }}">View</a>
+                        <a class="btn btn-warning" href="{{ route('admin.posts.edit', ['post' => $post]) }}">Edit</a>
+                        <button type="button" class="btn btn-danger js-delete" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ $post->id }}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 
-        <div class="mb-3">
-            <label for="title" class="form-label">Title</label>
-            <input
-                type="text"
-                class="form-control @error('title') is-invalid @enderror"
-                id="title"
-                name="title"
-                value="{{ old('title', $post->title) }}"
-            >
-            @error('title')
-                <div class="invalid-feedback">
-                    {{ $message }}
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteModalLabel">Delete confirmation</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            @enderror
-        </div>
-
-        <div class="mb-3">
-            <label for="category" class="form-label">Category</label>
-            <select
-                class="form-select @error('category_id') is-invalid @enderror"
-                id="category"
-                name="category_id"
-            >
-                @foreach ($categories as $category)
-                    <option
-                        value="{{ $category->id }}"
-                        @if (old('category_id', $post->category->id) == $category->id) selected @endif
-                    >{{ $category->name }}</option>
-                @endforeach
-            </select>
-            @error('category_id')
-                <div class="invalid-feedback">
-                    {{ $message }}
+                <div class="modal-body">
+                    Are you sure?
                 </div>
-            @enderror
-        </div>
-
-        <div class="mb-3">
-            <label for="url_image" class="form-label">Image url</label>
-            <input
-                type="url"
-                class="form-control @error('url_image') is-invalid @enderror"
-                id="url_image"
-                name="url_image"
-                value="{{ old('url_image', $post->url_image) }}"
-            >
-            @error('url_image')
-                <div class="invalid-feedback">
-                    {{ $message }}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <form
+                        action=""
+                        data-template="{{ route('admin.posts.destroy', ['post' => '*****']) }}"
+                        method="post"
+                        class="d-inline-block"
+                        id="confirm-delete"
+                    >
+                        @csrf
+                        @method('delete')
+                        <button class="btn btn-danger">Yes</button>
+                    </form>
                 </div>
-            @enderror
+            </div>
         </div>
+    </div>
 
-        <div class="mb-3">
-            <label for="content" class="form-label">Content</label>
-            <textarea
-                class="form-control @error('content') is-invalid @enderror"
-                id="content"
-                rows="10"
-                name="content">{{ old('content', $post->content) }}</textarea>
-            @error('content')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-            @enderror
-        </div>
-
-        <button class="btn btn-primary">Update</button>
-    </form>
+    {{ $posts->links() }}
 
 @endsection
